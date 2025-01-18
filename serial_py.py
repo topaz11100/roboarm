@@ -21,8 +21,9 @@ while True:
 		if is_pressed(k):
 			angle[i//2] += 1 if i % 2 == 0 else -1
 	send_angle(angle)
+	print(angle)
 	if is_pressed('esc'):
-		break	
+		break
 	
 serial.close()
 	
