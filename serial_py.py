@@ -1,30 +1,54 @@
 import serial
 import keyboard
+import threading
+import time
 
-KEY = ['q', 'a', 'w', 's', 'e', 'd', 'r', 'f', 't', 'g']
+KEY_MAP = {'q' : (0, 1), 'a' : (0, -1),
+		   'w' : (1, 1), 's' : (1, -1),
+		   'e' : (2, 1), 'd' : (2, -1),
+		   'r' : (3, 1), 'f' : (3, -1),
+		   't' : (4, 1), 'g' : (4, -1)}
 angle = [90, 90, 90, 90, 90]
-serial = serial.Serial( port='COM3', baudrate=9600 )
+port, rate = 'COM3', 9600
 
-def send_angle(arr):
-	result = ''
-	for i in angle:
-		if i < 0:
-			i = 0
-		elif i > 180:
-			i = 180
-		result += str(i)
-	serial.write(result.encode())
+def change_angle_by_key(angle, k):
+	idx, value = KEY_MAP[k][0], KEY_MAP[k][1]
+	angle[idx] += value
+	if angle[idx] < 0:
+		angle[idx] = 0
+	elif angle[idx] > 180:
+		angle[idx] = 180
 
-send_angle(angle)
-while True:
-	for i, k in enumerate(KEY):
-		if is_pressed(k):
-			angle[i//2] += 1 if i % 2 == 0 else -1
-	send_angle(angle)
+def do_pressed_key(k):
+	while keyboard.is_pressed(k):
+		change_angle_by_key(angle, k)
+		time.sleep(0.1)
+
+def key_thread(k):
+	thread = threading.Thread(target = do_pressed_key, args = (k, ))
+	thread.start()
+
+def send_angle(ser, angle):
+	result = ','.join( map(str, angle) )
+	result += '\n'
+	ser.write(result.encode())
+
+with serial.Serial(port, rate) as ser:
+	for k in KEY_MAP:
+		keyboard.add_hotkey(k, lambda x = k : key_thread(x))
 	print(angle)
-	if is_pressed('esc'):
-		break
+	send_angle(ser, angle)
+	keyboard.wait('esc')
+
 	
-serial.close()
+
+
+
+
+
+
+
+
+
 	
 			
