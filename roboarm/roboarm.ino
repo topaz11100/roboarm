@@ -24,7 +24,6 @@ void loop()
   p.strip(input);
   p.fillintarr(angle);
   arm.move_arr(angle, speed);
-
 }
 
 /*
